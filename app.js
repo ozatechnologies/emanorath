@@ -22,13 +22,13 @@ import {
 
 // Your Firebase configuration
 const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.FIREBASE_APP_ID,
-    measurementId: process.env.FIREBASE_MEASUREMENT_ID
+    apiKey: "AIzaSyDc-evVek_OOEuI4D1QK6TDZctxnS56q5s",
+    authDomain: "bangtanmessenger-e2c5b.firebaseapp.com",
+    projectId: "bangtanmessenger-e2c5b",
+    storageBucket: "bangtanmessenger-e2c5b.firebasestorage.app",
+    messagingSenderId: "1099466510344",
+    appId: "1:1099466510344:web:43c7e9ee2ea68036dcc1bd",
+    measurementId: "G-2SHGYXFB9D"
 };
 
 // Initialize Firebase
