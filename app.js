@@ -1,16 +1,16 @@
 // Import Firebase functions
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { 
-    getDatabase,
-    ref,
-    set,
+    getDatabase, 
+    ref, 
+    set, 
     push,
     get,
     child,
     remove,
     query,
     orderByChild,
-    equalTo
+    equalTo 
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 import { 
     getAuth, 
@@ -24,8 +24,8 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyDc-evVek_OOEuI4D1QK6TDZctxnS56q5s",
     authDomain: "bangtanmessenger-e2c5b.firebaseapp.com",
-    projectId: "bangtanmessenger-e2c5b",
     databaseURL: "https://bangtanmessenger-e2c5b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "bangtanmessenger-e2c5b",
     storageBucket: "bangtanmessenger-e2c5b.firebasestorage.app",
     messagingSenderId: "1099466510344",
     appId: "1:1099466510344:web:43c7e9ee2ea68036dcc1bd",
@@ -36,6 +36,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+
+// Test database connection and write permissions
+const testRef = ref(db, 'test');
+set(testRef, {
+    timestamp: new Date().toISOString(),
+    message: 'Testing database connection'
+})
+.then(() => {
+    console.log('✅ Database write test successful');
+    return get(testRef);
+})
+.then((snapshot) => {
+    console.log('✅ Database read test successful', snapshot.val());
+})
+.catch((error) => {
+    console.error('❌ Database test failed:', error);
+});
 
 // UI Functions
 function addManorathEntry() {
@@ -224,14 +241,16 @@ window.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         if (!auth.currentUser) {
+            console.error('❌ No user logged in');
             alert('Please login first');
             return;
         }
 
         try {
+            console.log('👤 Current user:', auth.currentUser.uid);
+            
             // Show loading state
             const submitButton = e.target.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
             submitButton.disabled = true;
             submitButton.innerHTML = 'Registering...';
 
@@ -260,47 +279,65 @@ window.addEventListener('DOMContentLoaded', () => {
                 timestamp: new Date().toISOString()
             };
 
+            console.log('📝 Attempting to save haveli:', haveliData);
+
             // Save to Firebase Realtime Database
-            const newHaveliRef = push(ref(db, 'havelis'));
+            const haveliRef = ref(db, 'havelis');
+            console.log('📍 Created database reference at:', haveliRef.toString());
+            
+            const newHaveliRef = push(haveliRef);
+            console.log('🆕 Generated new haveli reference:', newHaveliRef.key);
+            
             await set(newHaveliRef, haveliData);
+            console.log('💾 Haveli data saved successfully');
 
-            // Show success message
-            const successMessage = document.createElement('div');
-            successMessage.className = 'alert alert-success mt-3';
-            successMessage.role = 'alert';
-            successMessage.innerHTML = `
-                <h4 class="alert-heading">Haveli Registered Successfully!</h4>
-                <p>The haveli "${haveliData.haveliName}" has been registered with ${manorathEntries.length} Manorath/Seva entries.</p>
-            `;
-            e.target.insertBefore(successMessage, e.target.firstChild);
+            // Verify the data was saved
+            const savedData = await get(newHaveliRef);
+            if (savedData.exists()) {
+                console.log('✅ Verified saved data:', savedData.val());
+                
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.className = 'alert alert-success mt-3';
+                successMessage.role = 'alert';
+                successMessage.innerHTML = `
+                    <h4 class="alert-heading">Haveli Registered Successfully!</h4>
+                    <p>The haveli "${haveliData.haveliName}" has been registered with ${manorathEntries.length} Manorath/Seva entries.</p>
+                    <small>Reference ID: ${newHaveliRef.key}</small>
+                `;
+                e.target.insertBefore(successMessage, e.target.firstChild);
 
-            // Reset form
-            e.target.reset();
-            document.getElementById('manorathList').innerHTML = `
-                <div class="manorath-entry mb-2">
-                    <div class="row">
-                        <div class="col-5">
-                            <input type="text" class="form-control" placeholder="Manorath/Seva Name" required>
-                        </div>
-                        <div class="col-5">
-                            <input type="number" class="form-control" placeholder="Price" required>
-                        </div>
-                        <div class="col-2">
-                            <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
+                // Reset form
+                e.target.reset();
+                document.getElementById('manorathList').innerHTML = `
+                    <div class="manorath-entry mb-2">
+                        <div class="row">
+                            <div class="col-5">
+                                <input type="text" class="form-control" placeholder="Manorath/Seva Name" required>
+                            </div>
+                            <div class="col-5">
+                                <input type="number" class="form-control" placeholder="Price" required>
+                            </div>
+                            <div class="col-2">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            // Reload managed havelis list
-            await loadManagedHavelis(auth.currentUser.uid);
+                // Reload managed havelis list
+                await loadManagedHavelis(auth.currentUser.uid);
 
-            // Remove success message after 5 seconds
-            setTimeout(() => {
-                successMessage.remove();
-            }, 5000);
+                // Remove success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 5000);
+            } else {
+                throw new Error('Data was not saved properly');
+            }
 
         } catch (error) {
+            console.error('❌ Error saving haveli:', error);
             // Show error message
             const errorMessage = document.createElement('div');
             errorMessage.className = 'alert alert-danger mt-3';
