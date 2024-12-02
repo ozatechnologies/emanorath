@@ -185,37 +185,58 @@ async function loadManagedHavelis(uid) {
 // Handle Haveli Registration
 document.getElementById('registrationForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('Form submission started');
     
     if (!auth.currentUser) {
+        console.log('No user logged in');
         alert('Please login first');
         return;
     }
+    console.log('User is logged in:', auth.currentUser.email);
 
     // Collect all manorath entries
     const manorathEntries = [];
-    document.querySelectorAll('.manorath-entry').forEach(entry => {
+    const manorathElements = document.querySelectorAll('.manorath-entry');
+    console.log('Found manorath entries:', manorathElements.length);
+    
+    manorathElements.forEach((entry, index) => {
         const inputs = entry.querySelectorAll('input');
+        console.log(`Processing manorath entry ${index + 1}:`, inputs[0]?.value, inputs[1]?.value);
         manorathEntries.push({
-            name: inputs[0].value,
-            price: parseFloat(inputs[1].value)
+            name: inputs[0]?.value || '',
+            price: parseFloat(inputs[1]?.value || '0')
         });
     });
 
+    const haveliName = document.getElementById('haveliName')?.value;
+    const haveliLocation = document.getElementById('haveliLocation')?.value;
+    const haveliAddress = document.getElementById('haveliAddress')?.value;
+
+    console.log('Collected form data:', {
+        haveliName,
+        haveliLocation,
+        haveliAddress,
+        manorathEntries
+    });
+
     const haveliData = {
-        haveliName: document.getElementById('haveliName').value,
-        location: document.getElementById('haveliLocation').value,
-        address: document.getElementById('haveliAddress').value,
+        haveliName,
+        location: haveliLocation,
+        address: haveliAddress,
         authorityId: auth.currentUser.uid,
         manorathList: manorathEntries,
         timestamp: new Date().toISOString()
     };
 
     try {
-        await addDoc(collection(db, 'havelis'), haveliData);
+        console.log('Attempting to save to Firebase...');
+        const docRef = await addDoc(collection(db, 'havelis'), haveliData);
+        console.log('Document written with ID:', docRef.id);
         alert('Haveli registered successfully!');
         e.target.reset();
         loadManagedHavelis(auth.currentUser.uid);
     } catch (error) {
+        console.error('Error registering haveli:', error);
         alert('Error registering haveli: ' + error.message);
     }
 });
