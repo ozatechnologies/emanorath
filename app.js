@@ -228,33 +228,95 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Collect all manorath entries
-        const manorathEntries = [];
-        document.querySelectorAll('.manorath-entry').forEach(entry => {
-            const inputs = entry.querySelectorAll('input');
-            manorathEntries.push({
-                name: inputs[0].value,
-                price: parseFloat(inputs[1].value)
-            });
-        });
-
-        const haveliData = {
-            haveliName: document.getElementById('haveliName').value,
-            location: document.getElementById('haveliLocation').value,
-            address: document.getElementById('haveliAddress').value,
-            authorityId: auth.currentUser.uid,
-            manorathList: manorathEntries,
-            timestamp: new Date().toISOString()
-        };
-
         try {
+            // Show loading state
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Registering...';
+
+            // Collect all manorath entries
+            const manorathEntries = [];
+            document.querySelectorAll('.manorath-entry').forEach(entry => {
+                const inputs = entry.querySelectorAll('input');
+                if (inputs[0].value && inputs[1].value) {
+                    manorathEntries.push({
+                        name: inputs[0].value,
+                        price: parseFloat(inputs[1].value)
+                    });
+                }
+            });
+
+            if (manorathEntries.length === 0) {
+                throw new Error('Please add at least one Manorath/Seva entry');
+            }
+
+            const haveliData = {
+                haveliName: document.getElementById('haveliName').value,
+                location: document.getElementById('haveliLocation').value,
+                address: document.getElementById('haveliAddress').value,
+                authorityId: auth.currentUser.uid,
+                manorathList: manorathEntries,
+                timestamp: new Date().toISOString()
+            };
+
+            // Save to Firebase Realtime Database
             const newHaveliRef = push(ref(db, 'havelis'));
             await set(newHaveliRef, haveliData);
-            alert('Haveli registered successfully!');
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'alert alert-success mt-3';
+            successMessage.role = 'alert';
+            successMessage.innerHTML = `
+                <h4 class="alert-heading">Haveli Registered Successfully!</h4>
+                <p>The haveli "${haveliData.haveliName}" has been registered with ${manorathEntries.length} Manorath/Seva entries.</p>
+            `;
+            e.target.insertBefore(successMessage, e.target.firstChild);
+
+            // Reset form
             e.target.reset();
-            loadManagedHavelis(auth.currentUser.uid);
+            document.getElementById('manorathList').innerHTML = `
+                <div class="manorath-entry mb-2">
+                    <div class="row">
+                        <div class="col-5">
+                            <input type="text" class="form-control" placeholder="Manorath/Seva Name" required>
+                        </div>
+                        <div class="col-5">
+                            <input type="number" class="form-control" placeholder="Price" required>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Reload managed havelis list
+            await loadManagedHavelis(auth.currentUser.uid);
+
+            // Remove success message after 5 seconds
+            setTimeout(() => {
+                successMessage.remove();
+            }, 5000);
+
         } catch (error) {
-            alert('Error registering haveli: ' + error.message);
+            // Show error message
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'alert alert-danger mt-3';
+            errorMessage.role = 'alert';
+            errorMessage.textContent = 'Error registering haveli: ' + error.message;
+            e.target.insertBefore(errorMessage, e.target.firstChild);
+
+            // Remove error message after 5 seconds
+            setTimeout(() => {
+                errorMessage.remove();
+            }, 5000);
+        } finally {
+            // Reset button state
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Register Haveli';
         }
     });
 
