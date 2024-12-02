@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eManorath - Pushtimarg</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .container { max-width: 800px; }
+        .card { margin: 20px 0; }
+        .manorath-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .call-button {
+            color: green;
+            cursor: pointer;
+        }
+        .manorath-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .auth-section {
+            display: none;
+        }
+        .auth-section.active {
+            display: block;
+        }
+        #adminControls {
+            display: none;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+        }
+        .navbar {
+            background-color: #f8f9fa;
+            padding: 15px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo-container w-100 text-center">
+                <img src="https://i.ibb.co/9wBsQXY/e-Manorath.png" alt="eManorath Logo" class="img-fluid">
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Haveli Registry - Pushtimarg</h1>
+        
+        <!-- Auth Navigation -->
+        <div class="text-end mb-3" id="authNav">
+            <button class="btn btn-outline-primary" onclick="showLoginForm()">Authority Login</button>
+            <button class="btn btn-outline-secondary" onclick="showRegisterForm()">Register as Authority</button>
+        </div>
+        <div id="userInfo" style="display: none;" class="text-end mb-3">
+            <span id="welcomeMessage"></span>
+            <button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
+        </div>
+
+        <!-- Authority Registration Form -->
+        <div id="authorityRegister" class="card auth-section">
+            <div class="card-body">
+                <h2>Register as Haveli Authority</h2>
+                <form id="authorityRegisterForm">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="regName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="regEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="regPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Position/Authority</label>
+                        <input type="text" class="form-control" id="regPosition" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" id="regContact" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Authority Login Form -->
+        <div id="authorityLogin" class="card auth-section">
+            <div class="card-body">
+                <h2>Authority Login</h2>
+                <form id="authorityLoginForm">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Haveli Registration Form (Only visible to logged-in authorities) -->
+        <div id="adminControls">
+            <div class="card">
+                <div class="card-body">
+                    <h2>Register/Manage Haveli</h2>
+                    <form id="registrationForm">
+                        <div class="mb-3">
+                            <label class="form-label">Haveli Name</label>
+                            <input type="text" class="form-control" id="haveliName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location/City</label>
+                            <input type="text" class="form-control" id="haveliLocation" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Complete Address</label>
+                            <textarea class="form-control" id="haveliAddress" rows="2" required></textarea>
+                        </div>
+                        
+                        <!-- Dynamic Manorath/Seva List -->
+                        <div class="mb-3">
+                            <label class="form-label">Manorath/Seva Details</label>
+                            <div id="manorathList">
+                                <div class="manorath-entry mb-2">
+                                    <div class="row">
+                                        <div class="col-5">
+                                            <input type="text" class="form-control" placeholder="Manorath/Seva Name" required>
+                                        </div>
+                                        <div class="col-5">
+                                            <input type="number" class="form-control" placeholder="Price" required>
+                                        </div>
+                                        <div class="col-2">
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addManorathEntry()">Add More Manorath/Seva</button>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Register Haveli</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Manage Existing Havelis -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h2>Your Registered Havelis</h2>
+                    <div id="managedHavelis"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Form (Visible to all) -->
+        <div class="card">
+            <div class="card-body">
+                <h2>Search Haveli</h2>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="searchLocation" placeholder="Search by city/location">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search by haveli name or manorath">
+                    </div>
+                </div>
+                <button onclick="searchHaveli()" class="btn btn-secondary">Search</button>
+                <div id="searchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
