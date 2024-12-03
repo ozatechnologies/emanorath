@@ -13,7 +13,7 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyDc-evVek_OOEuI4D1QK6TDZctxnS56q5s",
     authDomain: "bangtanmessenger-e2c5b.firebaseapp.com",
-    databaseURL: "https://bangtanmessenger-e2c5b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    databaseURL: "https://bangtanmessenger-e2c5b-default-rtdb.firebaseio.com",
     projectId: "bangtanmessenger-e2c5b",
     storageBucket: "bangtanmessenger-e2c5b.firebasestorage.app",
     messagingSenderId: "1099466510344",
