@@ -215,45 +215,56 @@ async function handleHaveliRegistration(e) {
             return;
         }
 
-        // Debug: Log which elements we're trying to find
-        console.log('Looking for form elements...');
-
-        // Get form elements with debug logging
-        const formElements = {
-            haveliName: document.getElementById('haveliName'),
-            location: document.getElementById('haveliLocation'),
-            address: document.getElementById('haveliAddress'),
-            pithadhishwar: document.getElementById('pithadhishwar'),
-            gruh: document.getElementById('gruh'),
-            history: document.getElementById('history'),
-            manorathList: document.getElementById('manorathList')
-        };
-
-        // Debug: Log which elements were found/missing
-        const missingElements = [];
-        Object.entries(formElements).forEach(([name, element]) => {
-            if (!element) {
-                missingElements.push(name);
-                console.log(`Missing element: ${name}`);
-            } else {
-                console.log(`Found element: ${name}`);
-            }
-        });
-
-        // Check if any required elements are missing
-        if (missingElements.length > 0) {
-            alert(`Error: The following form elements are missing: ${missingElements.join(', ')}\nPlease refresh the page and try again.`);
+        // Get form elements
+        const form = document.getElementById('registrationForm');
+        if (!form) {
+            console.error('Registration form not found');
             return;
         }
 
-        // Get form data
+        // Get all required form values
+        const formData = {
+            haveliName: form.querySelector('#haveliName').value,
+            location: form.querySelector('#haveliLocation').value,
+            address: form.querySelector('#haveliAddress').value,
+            pithadhishwar: form.querySelector('#pithadhishwar').value,
+            gruh: form.querySelector('#gruh').value,
+            history: form.querySelector('#history').value,
+            manorathList: []
+        };
+
+        // Validate required fields
+        const requiredFields = ['haveliName', 'location', 'address', 'pithadhishwar', 'gruh'];
+        const missingFields = [];
+        
+        for (const field of requiredFields) {
+            if (!formData[field]) {
+                missingFields.push(field);
+            }
+        }
+        
+        if (missingFields.length > 0) {
+            alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+            return;
+        }
+
+        // Get Manorath entries
+        const manorathEntries = form.querySelectorAll('.manorath-entry');
+        manorathEntries.forEach(entry => {
+            const name = entry.querySelector('input[name="manorathName[]"]').value;
+            const price = entry.querySelector('input[name="manorathPrice[]"]').value;
+            if (name && price) {
+                formData.manorathList.push({ name, price: Number(price) });
+            }
+        });
+
+        // Generate a unique ID for the haveli
+        const haveliRef = push(ref(db, 'havelis'));
+        const haveliId = haveliRef.key;
+
+        // Prepare haveli data
         const haveliData = {
-            haveliName: formElements.haveliName.value.trim(),
-            location: formElements.location.value.trim(),
-            address: formElements.address.value.trim(),
-            pithadhishwar: formElements.pithadhishwar.value.trim(),
-            gruh: formElements.gruh.value.trim(),
-            history: formElements.history ? formElements.history.value.trim() : '',
+            ...formData,
             registeredBy: {
                 uid: currentUser.uid,
                 email: currentUser.email
@@ -261,94 +272,25 @@ async function handleHaveliRegistration(e) {
             timestamp: new Date().toISOString()
         };
 
-        // Validate required fields
-        const emptyFields = [];
-        Object.entries(haveliData).forEach(([key, value]) => {
-            if (key !== 'history' && key !== 'registeredBy' && key !== 'timestamp' && !value) {
-                emptyFields.push(key);
-            }
-        });
+        // Save haveli data
+        await set(haveliRef, haveliData);
 
-        if (emptyFields.length > 0) {
-            alert(`Please fill in the following required fields: ${emptyFields.join(', ')}`);
-            return;
-        }
-
-        // Get manorath entries
-        const manorathEntries = [];
-        const manorathElements = formElements.manorathList.querySelectorAll('.manorath-entry');
-        
-        manorathElements.forEach((entry, index) => {
-            const nameInput = entry.querySelector('input[name="manorathName[]"]');
-            const priceInput = entry.querySelector('input[name="manorathPrice[]"]');
-            
-            if (nameInput && priceInput) {
-                const name = nameInput.value.trim();
-                const price = priceInput.value.trim();
-                
-                if (name && price) {
-                    manorathEntries.push({
-                        name: name,
-                        price: parseFloat(price)
-                    });
-                }
-            }
-        });
-
-        // Validate at least one manorath entry
-        if (manorathEntries.length === 0) {
-            alert('Please add at least one Manorath/Seva entry');
-            return;
-        }
-
-        // Add manorath list to haveli data
-        haveliData.manorathList = manorathEntries;
-
-        // Save to Firebase under havelis node
-        const haveliRef = ref(db, 'havelis');
-        const newHaveliRef = push(haveliRef);
-        await set(newHaveliRef, haveliData);
-
-        // Also save reference to user's registered havelis
-        const userHaveliRef = ref(db, `users/${currentUser.uid}/registeredHavelis/${newHaveliRef.key}`);
+        // Update user's registered havelis
+        const userHaveliRef = ref(db, `users/${currentUser.uid}/registeredHavelis/${haveliId}`);
         await set(userHaveliRef, {
-            haveliId: newHaveliRef.key,
-            haveliName: haveliData.haveliName,
-            location: haveliData.location,
+            haveliId,
+            haveliName: formData.haveliName,
+            location: formData.location,
             timestamp: haveliData.timestamp
         });
 
-        // Show success message
         alert('Haveli registered successfully!');
-        
-        // Reset form
-        e.target.reset();
-        
-        // Reset manorath list to initial state
-        if (formElements.manorathList) {
-            formElements.manorathList.innerHTML = `
-                <div class="manorath-entry mb-2">
-                    <div class="row">
-                        <div class="col-5">
-                            <input type="text" class="form-control" name="manorathName[]" placeholder="Manorath/Seva Name" required>
-                        </div>
-                        <div class="col-5">
-                            <input type="number" class="form-control" name="manorathPrice[]" placeholder="Price" required>
-                        </div>
-                        <div class="col-2">
-                            <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Refresh the list of managed havelis
+        form.reset();
         loadManagedHavelis();
 
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error registering haveli: ' + error.message);
+        console.error('Error registering haveli:', error);
+        alert('Failed to register haveli: ' + error.message);
     }
 }
 
@@ -413,4 +355,5 @@ window.removeManorathEntry = function(button) {
         entry.remove();
     }
 };
+
 
