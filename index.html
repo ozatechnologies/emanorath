@@ -124,15 +124,27 @@
                     <form id="registrationForm">
                         <div class="mb-3">
                             <label class="form-label">Haveli Name</label>
-                            <input type="text" class="form-control" id="haveliName" required>
+                            <input type="text" class="form-control" id="haveliName" name="haveliName" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Location/City</label>
-                            <input type="text" class="form-control" id="haveliLocation" required>
+                            <input type="text" class="form-control" id="haveliLocation" name="haveliLocation" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Complete Address</label>
-                            <textarea class="form-control" id="haveliAddress" rows="2" required></textarea>
+                            <textarea class="form-control" id="haveliAddress" name="haveliAddress" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Pithadhishwar Name</label>
+                            <input type="text" class="form-control" id="pithadhishwar" name="pithadhishwar" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Gruh</label>
+                            <input type="text" class="form-control" id="gruh" name="gruh" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Haveli History</label>
+                            <textarea class="form-control" id="history" name="history" rows="4" placeholder="Enter the historical background and significance of the haveli..."></textarea>
                         </div>
                         
                         <!-- Dynamic Manorath/Seva List -->
@@ -142,10 +154,10 @@
                                 <div class="manorath-entry mb-2">
                                     <div class="row">
                                         <div class="col-5">
-                                            <input type="text" class="form-control" placeholder="Manorath/Seva Name" required>
+                                            <input type="text" class="form-control" name="manorathName[]" placeholder="Manorath/Seva Name" required>
                                         </div>
                                         <div class="col-5">
-                                            <input type="number" class="form-control" placeholder="Price" required>
+                                            <input type="number" class="form-control" name="manorathPrice[]" placeholder="Price" required>
                                         </div>
                                         <div class="col-2">
                                             <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
