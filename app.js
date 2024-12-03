@@ -25,6 +25,44 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+// Debug function to check form elements
+function debugFormElements() {
+    console.log('Checking form elements...');
+    const elements = ['haveliName', 'haveliLocation', 'haveliAddress', 'pithadhishwar', 'gruh', 'history', 'manorathList'];
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        console.log(`Element ${id}: ${element ? 'Found' : 'Not Found'}`);
+    });
+}
+
+// Initialize forms and UI
+function initializeForms() {
+    console.log('Initializing forms...');
+    
+    // Debug form elements
+    debugFormElements();
+    
+    // Set up form event listeners
+    const registrationForm = document.getElementById('registrationForm');
+    const authorityRegisterForm = document.getElementById('authorityRegisterForm');
+    const authorityLoginForm = document.getElementById('authorityLoginForm');
+    
+    if (registrationForm) {
+        console.log('Found registration form, adding event listener');
+        registrationForm.addEventListener('submit', handleHaveliRegistration);
+    } else {
+        console.log('Registration form not found');
+    }
+    
+    if (authorityRegisterForm) {
+        authorityRegisterForm.addEventListener('submit', handleRegistration);
+    }
+    
+    if (authorityLoginForm) {
+        authorityLoginForm.addEventListener('submit', handleLogin);
+    }
+}
+
 // Make UI functions globally accessible
 window.showLoginForm = function() {
     const loginForm = document.getElementById('authorityLogin');
@@ -65,10 +103,13 @@ onAuthStateChanged(auth, (user) => {
         if (authNav) authNav.style.display = 'none';
         if (userInfo) userInfo.style.display = 'block';
         if (welcomeMessage) welcomeMessage.textContent = `Welcome, ${user.email}`;
-        if (adminControls) adminControls.style.display = 'block';
+        if (adminControls) {
+            adminControls.style.display = 'block';
+            // Re-initialize forms when admin controls become visible
+            setTimeout(initializeForms, 100);
+        }
         
         window.hideAuthForms();
-        // Load managed havelis when user logs in
         loadManagedHavelis();
     } else {
         // User is signed out
@@ -84,27 +125,11 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Initialize auth forms after DOM is loaded
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Show login form by default
+    console.log('DOM Content Loaded');
     window.showLoginForm();
-    
-    // Set up form event listeners
-    const authorityRegisterForm = document.getElementById('authorityRegisterForm');
-    const authorityLoginForm = document.getElementById('authorityLoginForm');
-    const haveliRegistrationForm = document.getElementById('registrationForm');
-    
-    if (authorityRegisterForm) {
-        authorityRegisterForm.addEventListener('submit', handleRegistration);
-    }
-    
-    if (authorityLoginForm) {
-        authorityLoginForm.addEventListener('submit', handleLogin);
-    }
-
-    if (haveliRegistrationForm) {
-        haveliRegistrationForm.addEventListener('submit', handleHaveliRegistration);
-    }
+    initializeForms();
 });
 
 // Handle Registration
@@ -388,3 +413,4 @@ window.removeManorathEntry = function(button) {
         entry.remove();
     }
 };
+
