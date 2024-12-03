@@ -25,36 +25,98 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+// Make UI functions globally accessible
+window.showLoginForm = function() {
+    const loginForm = document.getElementById('authorityLogin');
+    const registerForm = document.getElementById('authorityRegister');
+    if (loginForm && registerForm) {
+        loginForm.classList.add('active');
+        registerForm.classList.remove('active');
+    }
+};
+
+window.showRegisterForm = function() {
+    const loginForm = document.getElementById('authorityLogin');
+    const registerForm = document.getElementById('authorityRegister');
+    if (loginForm && registerForm) {
+        loginForm.classList.remove('active');
+        registerForm.classList.add('active');
+    }
+};
+
+window.hideAuthForms = function() {
+    const loginForm = document.getElementById('authorityLogin');
+    const registerForm = document.getElementById('authorityRegister');
+    if (loginForm && registerForm) {
+        loginForm.classList.remove('active');
+        registerForm.classList.remove('active');
+    }
+};
+
 // Auth state observer
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // User is signed in
-        document.getElementById('authNav').style.display = 'none';
-        document.getElementById('userInfo').style.display = 'block';
-        document.getElementById('welcomeMessage').textContent = `Welcome, ${user.email}`;
-        document.getElementById('adminControls').style.display = 'block';
-        hideAuthForms();
+        const authNav = document.getElementById('authNav');
+        const userInfo = document.getElementById('userInfo');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const adminControls = document.getElementById('adminControls');
+        
+        if (authNav) authNav.style.display = 'none';
+        if (userInfo) userInfo.style.display = 'block';
+        if (welcomeMessage) welcomeMessage.textContent = `Welcome, ${user.email}`;
+        if (adminControls) adminControls.style.display = 'block';
+        
+        window.hideAuthForms();
         // Load managed havelis when user logs in
         loadManagedHavelis();
     } else {
         // User is signed out
-        document.getElementById('authNav').style.display = 'block';
-        document.getElementById('userInfo').style.display = 'none';
-        document.getElementById('adminControls').style.display = 'none';
-        showLoginForm();
+        const authNav = document.getElementById('authNav');
+        const userInfo = document.getElementById('userInfo');
+        const adminControls = document.getElementById('adminControls');
+        
+        if (authNav) authNav.style.display = 'block';
+        if (userInfo) userInfo.style.display = 'none';
+        if (adminControls) adminControls.style.display = 'none';
+        
+        window.showLoginForm();
     }
 });
 
-// Authority Registration
-document.getElementById('authorityRegisterForm').addEventListener('submit', async (e) => {
+// Initialize auth forms after DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Show login form by default
+    window.showLoginForm();
+    
+    // Set up form event listeners
+    const authorityRegisterForm = document.getElementById('authorityRegisterForm');
+    const authorityLoginForm = document.getElementById('authorityLoginForm');
+    
+    if (authorityRegisterForm) {
+        authorityRegisterForm.addEventListener('submit', handleRegistration);
+    }
+    
+    if (authorityLoginForm) {
+        authorityLoginForm.addEventListener('submit', handleLogin);
+    }
+});
+
+// Handle Registration
+async function handleRegistration(e) {
     e.preventDefault();
     
     try {
-        const email = document.getElementById('regEmail').value;
-        const password = document.getElementById('regPassword').value;
-        const name = document.getElementById('regName').value;
-        const position = document.getElementById('regPosition').value;
-        const contact = document.getElementById('regContact').value;
+        const email = document.getElementById('regEmail')?.value;
+        const password = document.getElementById('regPassword')?.value;
+        const name = document.getElementById('regName')?.value;
+        const position = document.getElementById('regPosition')?.value;
+        const contact = document.getElementById('regContact')?.value;
+
+        if (!email || !password || !name || !position || !contact) {
+            alert('Please fill in all required fields');
+            return;
+        }
 
         // Create user in Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -71,29 +133,34 @@ document.getElementById('authorityRegisterForm').addEventListener('submit', asyn
         });
 
         alert('Registration successful!');
-        hideAuthForms();
+        window.hideAuthForms();
     } catch (error) {
         console.error('Registration error:', error);
         alert('Registration failed: ' + error.message);
     }
-});
+}
 
-// Authority Login
-document.getElementById('authorityLoginForm').addEventListener('submit', async (e) => {
+// Handle Login
+async function handleLogin(e) {
     e.preventDefault();
     
     try {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
+        const email = document.getElementById('loginEmail')?.value;
+        const password = document.getElementById('loginPassword')?.value;
+
+        if (!email || !password) {
+            alert('Please enter both email and password');
+            return;
+        }
 
         await signInWithEmailAndPassword(auth, email, password);
         alert('Login successful!');
-        hideAuthForms();
+        window.hideAuthForms();
     } catch (error) {
         console.error('Login error:', error);
         alert('Login failed: ' + error.message);
     }
-});
+}
 
 // Logout function
 window.logout = async function() {
@@ -105,22 +172,6 @@ window.logout = async function() {
         alert('Logout failed: ' + error.message);
     }
 };
-
-// UI Helper functions
-window.showLoginForm = function() {
-    document.getElementById('authorityLogin').classList.add('active');
-    document.getElementById('authorityRegister').classList.remove('active');
-};
-
-window.showRegisterForm = function() {
-    document.getElementById('authorityLogin').classList.remove('active');
-    document.getElementById('authorityRegister').classList.add('active');
-};
-
-function hideAuthForms() {
-    document.getElementById('authorityLogin').classList.remove('active');
-    document.getElementById('authorityRegister').classList.remove('active');
-}
 
 // Handle Haveli Registration
 document.getElementById('registrationForm').addEventListener('submit', async (e) => {
