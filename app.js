@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up form event listeners
     const authorityRegisterForm = document.getElementById('authorityRegisterForm');
     const authorityLoginForm = document.getElementById('authorityLoginForm');
+    const haveliRegistrationForm = document.getElementById('registrationForm');
     
     if (authorityRegisterForm) {
         authorityRegisterForm.addEventListener('submit', handleRegistration);
@@ -99,6 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (authorityLoginForm) {
         authorityLoginForm.addEventListener('submit', handleLogin);
+    }
+
+    if (haveliRegistrationForm) {
+        haveliRegistrationForm.addEventListener('submit', handleHaveliRegistration);
     }
 });
 
@@ -174,7 +179,7 @@ window.logout = async function() {
 };
 
 // Handle Haveli Registration
-document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+async function handleHaveliRegistration(e) {
     e.preventDefault();
     
     try {
@@ -185,14 +190,29 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
             return;
         }
 
+        // Get form elements
+        const haveliNameInput = document.getElementById('haveliName');
+        const locationInput = document.getElementById('haveliLocation');
+        const addressInput = document.getElementById('haveliAddress');
+        const pithadhishwarInput = document.getElementById('pithadhishwarName');
+        const gruhInput = document.getElementById('gruhName');
+        const historyInput = document.getElementById('haveliHistory');
+        const manorathList = document.getElementById('manorathList');
+
+        // Check if all required elements exist
+        if (!haveliNameInput || !locationInput || !addressInput || !pithadhishwarInput || !gruhInput || !manorathList) {
+            alert('Error: Some form elements are missing. Please refresh the page and try again.');
+            return;
+        }
+
         // Get form data
         const haveliData = {
-            haveliName: document.getElementById('haveliName').value,
-            location: document.getElementById('haveliLocation').value,
-            address: document.getElementById('haveliAddress').value,
-            pithadhishwar: document.getElementById('pithadhishwarName').value,
-            gruh: document.getElementById('gruhName').value,
-            history: document.getElementById('haveliHistory').value || '',
+            haveliName: haveliNameInput.value,
+            location: locationInput.value,
+            address: addressInput.value,
+            pithadhishwar: pithadhishwarInput.value,
+            gruh: gruhInput.value,
+            history: historyInput ? historyInput.value : '',
             registeredBy: {
                 uid: currentUser.uid,
                 email: currentUser.email
@@ -200,9 +220,17 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
             timestamp: new Date().toISOString()
         };
 
+        // Validate required fields
+        if (!haveliData.haveliName || !haveliData.location || !haveliData.address || !haveliData.pithadhishwar || !haveliData.gruh) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
         // Get manorath entries
         const manorathEntries = [];
-        document.querySelectorAll('.manorath-entry').forEach(entry => {
+        const manorathElements = manorathList.querySelectorAll('.manorath-entry');
+        
+        manorathElements.forEach(entry => {
             const nameInput = entry.querySelector('input[name="manorathName[]"]');
             const priceInput = entry.querySelector('input[name="manorathPrice[]"]');
             
@@ -238,21 +266,23 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
         e.target.reset();
         
         // Reset manorath list to initial state
-        document.getElementById('manorathList').innerHTML = `
-            <div class="manorath-entry mb-2">
-                <div class="row">
-                    <div class="col-5">
-                        <input type="text" class="form-control" name="manorathName[]" placeholder="Manorath/Seva Name" required>
-                    </div>
-                    <div class="col-5">
-                        <input type="number" class="form-control" name="manorathPrice[]" placeholder="Price" required>
-                    </div>
-                    <div class="col-2">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
+        if (manorathList) {
+            manorathList.innerHTML = `
+                <div class="manorath-entry mb-2">
+                    <div class="row">
+                        <div class="col-5">
+                            <input type="text" class="form-control" name="manorathName[]" placeholder="Manorath/Seva Name" required>
+                        </div>
+                        <div class="col-5">
+                            <input type="number" class="form-control" name="manorathPrice[]" placeholder="Price" required>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeManorathEntry(this)">Remove</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
 
         // Refresh the list of managed havelis
         loadManagedHavelis();
@@ -261,7 +291,7 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
         console.error('Error:', error);
         alert('Error registering haveli: ' + error.message);
     }
-});
+}
 
 // Function to load managed havelis
 async function loadManagedHavelis() {
