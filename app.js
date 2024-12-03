@@ -198,9 +198,9 @@ async function handleHaveliRegistration(e) {
             haveliName: document.getElementById('haveliName'),
             location: document.getElementById('haveliLocation'),
             address: document.getElementById('haveliAddress'),
-            pithadhishwar: document.getElementById('pithadhishwarName'),
-            gruh: document.getElementById('gruhName'),
-            history: document.getElementById('haveliHistory'),
+            pithadhishwar: document.getElementById('pithadhishwar'),
+            gruh: document.getElementById('gruh'),
+            history: document.getElementById('history'),
             manorathList: document.getElementById('manorathList')
         };
 
