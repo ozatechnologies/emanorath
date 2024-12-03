@@ -190,29 +190,45 @@ async function handleHaveliRegistration(e) {
             return;
         }
 
-        // Get form elements
-        const haveliNameInput = document.getElementById('haveliName');
-        const locationInput = document.getElementById('haveliLocation');
-        const addressInput = document.getElementById('haveliAddress');
-        const pithadhishwarInput = document.getElementById('pithadhishwarName');
-        const gruhInput = document.getElementById('gruhName');
-        const historyInput = document.getElementById('haveliHistory');
-        const manorathList = document.getElementById('manorathList');
+        // Debug: Log which elements we're trying to find
+        console.log('Looking for form elements...');
 
-        // Check if all required elements exist
-        if (!haveliNameInput || !locationInput || !addressInput || !pithadhishwarInput || !gruhInput || !manorathList) {
-            alert('Error: Some form elements are missing. Please refresh the page and try again.');
+        // Get form elements with debug logging
+        const formElements = {
+            haveliName: document.getElementById('haveliName'),
+            location: document.getElementById('haveliLocation'),
+            address: document.getElementById('haveliAddress'),
+            pithadhishwar: document.getElementById('pithadhishwarName'),
+            gruh: document.getElementById('gruhName'),
+            history: document.getElementById('haveliHistory'),
+            manorathList: document.getElementById('manorathList')
+        };
+
+        // Debug: Log which elements were found/missing
+        const missingElements = [];
+        Object.entries(formElements).forEach(([name, element]) => {
+            if (!element) {
+                missingElements.push(name);
+                console.log(`Missing element: ${name}`);
+            } else {
+                console.log(`Found element: ${name}`);
+            }
+        });
+
+        // Check if any required elements are missing
+        if (missingElements.length > 0) {
+            alert(`Error: The following form elements are missing: ${missingElements.join(', ')}\nPlease refresh the page and try again.`);
             return;
         }
 
         // Get form data
         const haveliData = {
-            haveliName: haveliNameInput.value,
-            location: locationInput.value,
-            address: addressInput.value,
-            pithadhishwar: pithadhishwarInput.value,
-            gruh: gruhInput.value,
-            history: historyInput ? historyInput.value : '',
+            haveliName: formElements.haveliName.value.trim(),
+            location: formElements.location.value.trim(),
+            address: formElements.address.value.trim(),
+            pithadhishwar: formElements.pithadhishwar.value.trim(),
+            gruh: formElements.gruh.value.trim(),
+            history: formElements.history ? formElements.history.value.trim() : '',
             registeredBy: {
                 uid: currentUser.uid,
                 email: currentUser.email
@@ -221,26 +237,44 @@ async function handleHaveliRegistration(e) {
         };
 
         // Validate required fields
-        if (!haveliData.haveliName || !haveliData.location || !haveliData.address || !haveliData.pithadhishwar || !haveliData.gruh) {
-            alert('Please fill in all required fields');
+        const emptyFields = [];
+        Object.entries(haveliData).forEach(([key, value]) => {
+            if (key !== 'history' && key !== 'registeredBy' && key !== 'timestamp' && !value) {
+                emptyFields.push(key);
+            }
+        });
+
+        if (emptyFields.length > 0) {
+            alert(`Please fill in the following required fields: ${emptyFields.join(', ')}`);
             return;
         }
 
         // Get manorath entries
         const manorathEntries = [];
-        const manorathElements = manorathList.querySelectorAll('.manorath-entry');
+        const manorathElements = formElements.manorathList.querySelectorAll('.manorath-entry');
         
-        manorathElements.forEach(entry => {
+        manorathElements.forEach((entry, index) => {
             const nameInput = entry.querySelector('input[name="manorathName[]"]');
             const priceInput = entry.querySelector('input[name="manorathPrice[]"]');
             
-            if (nameInput && priceInput && nameInput.value && priceInput.value) {
-                manorathEntries.push({
-                    name: nameInput.value,
-                    price: parseFloat(priceInput.value)
-                });
+            if (nameInput && priceInput) {
+                const name = nameInput.value.trim();
+                const price = priceInput.value.trim();
+                
+                if (name && price) {
+                    manorathEntries.push({
+                        name: name,
+                        price: parseFloat(price)
+                    });
+                }
             }
         });
+
+        // Validate at least one manorath entry
+        if (manorathEntries.length === 0) {
+            alert('Please add at least one Manorath/Seva entry');
+            return;
+        }
 
         // Add manorath list to haveli data
         haveliData.manorathList = manorathEntries;
@@ -266,8 +300,8 @@ async function handleHaveliRegistration(e) {
         e.target.reset();
         
         // Reset manorath list to initial state
-        if (manorathList) {
-            manorathList.innerHTML = `
+        if (formElements.manorathList) {
+            formElements.manorathList.innerHTML = `
                 <div class="manorath-entry mb-2">
                     <div class="row">
                         <div class="col-5">
